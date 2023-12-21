@@ -47,15 +47,18 @@
         ></textarea>
       </div>
     </div>
-    <div class="d-flex flex-wrap gap-3 mt-3">
-      <div
-        v-for="(genre, i) in genres"
-        :key="i"
-        class="card small cursor-pointer"
-        :class="activeGenre(genre) ? 'active' : ''"
-        @click="selectGenre(genre)"
-      >
-        {{ genre }}
+    <div class="row col-md-6 mt-3">
+      <div class="d-flex flex-wrap gap-2">
+        <div
+          v-for="(genre, i) in genres"
+          :key="i"
+          class="card small cursor-pointer mb-0"
+          :class="activeGenre(genre.id) ? 'active' : ''"
+          @click="selectGenre(genre)"
+        >
+          {{ genre?.name }}
+          {{ activeGenre(genre.id) }}
+        </div>
       </div>
     </div>
     <div class="d-flex justify-content-end text-end gap-3 mt-5">
@@ -68,14 +71,16 @@
 </template>
 
 <script setup>
+import axios from 'axios';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
-const genres = ['Drama', 'Action', 'Animation', 'Sci-Fi', 'Horror'];
+const genres = ref([]);
 const id = route.params.id;
 const movies = ref([]);
+const nextGenre = ref(false);
 const form = ref({
   id: '',
   title: '',
@@ -85,15 +90,17 @@ const form = ref({
 });
 
 const selectGenre = (genre) => {
-  if (!form.value.genres.includes(genre)) {
-    form.value.genres.push(genre);
-  } else {
-    form.value.genres = form.value.genres.filter((item) => item !== genre);
-  }
+  // if (!form.value.genres.includes(genre)) {
+  //   form.value.genres.push(genre);
+  // } else {
+  //   form.value.genres = form.value.genres.filter((item) => item !== genre);
+  // }
 };
 
-const activeGenre = (genre) => {
-  return form.value.genres.includes(genre);
+const activeGenre = (id) => {
+  // return form.value.genres.includes(genre);
+  const isGenre = form.value.genres.filter((item) => item.id == id);
+  return isGenre.length > 0;
 };
 
 const onSubmit = () => {
@@ -125,21 +132,31 @@ const generateId = () => {
   return id;
 };
 
-const deleteData = () => {
+const deleteData = async () => {
   if (confirm('Are you sure to delete this movie?')) {
-    const result = movies.value.filter((item) => item.id != id);
-    sessionStorage.setItem('movies', JSON.stringify(result));
+    await axios.delete(`movie/${id}`);
     router.push('/');
   }
 };
 
-const getData = () => {
-  form.value = movies.value.filter((item) => item.id == id)[0];
+const getData = async () => {
+  const { data } = await axios.get(`movie/${id}`);
+  const { title, director, summary, genres: data_genres } = data.data;
+  form.value = {
+    title: title,
+    director: director,
+    summary: summary,
+    genres: data_genres,
+  };
+};
+
+const getGenres = async () => {
+  const { data } = await axios.get('genre');
+  genres.value = data.data.data;
 };
 
 onMounted(() => {
-  movies.value = JSON.parse(sessionStorage.getItem('movies')) || [];
-
+  getGenres();
   if (id) {
     getData();
   }
