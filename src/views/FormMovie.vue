@@ -35,7 +35,6 @@
         <label for="summary">Summary</label>
         <textarea
           v-model="form.summary"
-          minlength="10"
           required
           maxlength="100"
           placeholder="Enter summary"
@@ -53,11 +52,10 @@
           v-for="(genre, i) in genres"
           :key="i"
           class="card small cursor-pointer mb-0"
-          :class="activeGenre(genre.id) ? 'active' : ''"
-          @click="selectGenre(genre)"
+          :class="activeGenre(genre.name) ? 'active' : ''"
+          @click="selectGenre(genre.name)"
         >
           {{ genre?.name }}
-          {{ activeGenre(genre.id) }}
         </div>
       </div>
     </div>
@@ -79,57 +77,37 @@ const router = useRouter();
 const route = useRoute();
 const genres = ref([]);
 const id = route.params.id;
-const movies = ref([]);
-const nextGenre = ref(false);
 const form = ref({
   id: '',
   title: '',
   director: '',
   summary: '',
-  genres: [],
+  genre: [],
 });
 
-const selectGenre = (genre) => {
-  // if (!form.value.genres.includes(genre)) {
-  //   form.value.genres.push(genre);
-  // } else {
-  //   form.value.genres = form.value.genres.filter((item) => item !== genre);
-  // }
-};
-
-const activeGenre = (id) => {
-  // return form.value.genres.includes(genre);
-  const isGenre = form.value.genres.filter((item) => item.id == id);
-  return isGenre.length > 0;
-};
-
-const onSubmit = () => {
-  if (form.value.genres) {
-    if (id) {
-      const data = movies.value.map((item) => {
-        let result = item;
-        if (item.id == id) {
-          result = form.value;
-        }
-
-        return result;
-      });
-      sessionStorage.setItem('movies', JSON.stringify(data));
-    } else {
-      form.value.id = generateId();
-      movies.value = [form.value, ...movies.value];
-      sessionStorage.setItem('movies', JSON.stringify(movies.value));
-    }
-
-    router.push('/');
+const selectGenre = (name) => {
+  if (activeGenre(name)) {
+    form.value.genre = form.value.genre.filter((item) => item !== name);
+  } else {
+    form.value.genre.push(name);
   }
 };
 
-const generateId = () => {
-  const timestamp = new Date().getTime();
-  const randomString = Math.random().toString(36).substring(2, 8);
-  const id = timestamp + '-' + randomString;
-  return id;
+const activeGenre = (name) => {
+  const isGenre = form.value.genre.filter((item) => item == name);
+  return isGenre.length > 0;
+};
+
+const onSubmit = async () => {
+  if (form.value.genre) {
+    if (id) {
+      await axios.put(`movie/${id}`, form.value);
+      router.push('/');
+    } else {
+      await axios.post('movie', form.value);
+      router.push('/');
+    }
+  }
 };
 
 const deleteData = async () => {
@@ -146,7 +124,7 @@ const getData = async () => {
     title: title,
     director: director,
     summary: summary,
-    genres: data_genres,
+    genre: data_genres.map((item) => item.name),
   };
 };
 

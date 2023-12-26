@@ -1,7 +1,7 @@
 <template>
   <header class="pt-3 d-flex justify-content-between">
-    <h4 class="fw-600">Movies Collection</h4>
-    <RouterLink to="/genre"><h6>Genres</h6></RouterLink>
+    <h4 class="fw-600">Genres</h4>
+    <RouterLink to="/"><h6>Movies</h6></RouterLink>
   </header>
   <div>
     <div class="row">
@@ -10,30 +10,26 @@
           <input
             v-model="search"
             class="input"
-            placeholder="Search movie"
+            placeholder="Search genre"
             required=""
             type="text"
-            @keyup="getMovies(1, 'refresh')"
+            @keyup="getGenres(1, 'refresh')"
           />
           <span class="input-border"></span>
         </div>
       </div>
     </div>
     <div class="row">
-      <div v-for="movie in movies" :key="movie.id" class="col-lg-4 col-sm-6">
-        <RouterLink :to="'/movie/' + movie.id">
+      <div v-for="genre in genres" :key="genre.id" class="col-lg-4 col-sm-6">
+        <RouterLink :to="'/genre/' + genre.id">
           <div class="card w-100 cursor-pointer">
-            <h6>{{ movie.title }}</h6>
-            <p class="gray mb-2">{{ movie.director }}</p>
-            <div class="text-end">
-              <p class="gray mb-0 fs-sm">{{ generateGenres(movie.genres) }}</p>
-            </div>
+            <h6>{{ genre.name }}</h6>
           </div>
         </RouterLink>
       </div>
     </div>
   </div>
-  <RouterLink class="fixedButton" to="/create-movie">
+  <RouterLink class="fixedButton" to="/create-genre">
     <div class="roundedFixedBtn">
       <p class="fw-700">+</p>
     </div>
@@ -44,38 +40,33 @@
 import axios from 'axios';
 import { onMounted, ref } from 'vue';
 
-const movies = ref([]);
+const genres = ref([]);
 const search = ref('');
 const currentPage = ref(1);
 const nextPage = ref('');
 const lastPage = ref(false);
 
-const generateGenres = (genres) => {
-  return genres.map((item) => item.name).join(' / ');
-};
-
-const getMovies = async (page, type = '') => {
-  const { data } = await axios.get('movie', {
+const getGenres = async (page, type = '') => {
+  const { data } = await axios.get('genre', {
     params: { search: search.value, page },
   });
-  const { data: movie, current_page, next_page_url } = data.data;
+  const { data: genre, current_page, next_page_url } = data.data;
 
   currentPage.value = current_page;
   nextPage.value = next_page_url;
-  movies.value = type == 'refresh' ? movie : [...movies.value, ...movie];
-  if (movie.length == 0) lastPage.value = true;
+  genres.value = type == 'refresh' ? genre : [...genres.value, ...genre];
+  if (genre.length == 0) lastPage.value = true;
 };
 
 onMounted(() => {
-  getMovies();
-
+  getGenres();
   window.onscroll = () => {
     let bottomOfWindow =
       Math.ceil(document.documentElement.scrollTop) + window.innerHeight ===
       document.documentElement.offsetHeight;
 
     if (bottomOfWindow && !lastPage.value) {
-      getMovies(currentPage.value + 1);
+      getGenres(currentPage.value + 1);
     }
   };
 });

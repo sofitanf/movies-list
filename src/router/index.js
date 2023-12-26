@@ -18,6 +18,21 @@ const router = createRouter({
       name: 'edit-movie',
       component: () => import('../views/FormMovie.vue'),
     },
+    {
+      path: '/genre',
+      name: 'genre',
+      component: () => import('../views/Genres.vue'),
+    },
+    {
+      path: '/create-genre',
+      name: 'create-genre',
+      component: () => import('../views/FormGenre.vue'),
+    },
+    {
+      path: '/genre/:id',
+      name: 'edit-genre',
+      component: () => import('../views/FormGenre.vue'),
+    },
   ],
 });
 
